@@ -1,4 +1,4 @@
-# SmartMail (InboxInsights) — Smart Email Dashboard
+# InboxInsights - Automated Multi-Account Email Digest
 
 Automated multi-Gmail account email subject reporter with scheduled PDF generation and WhatsApp delivery.
 

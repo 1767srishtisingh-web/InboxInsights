@@ -28,16 +28,16 @@ async function generateReport(emails, options = {}) {
       const doc = new PDFDocument({
         size: 'A4',
         margins: { top: 50, bottom: 50, left: 50, right: 50 },
-        info: { Title: 'Smart Email Report', Author: 'InboxInsights', Subject: 'Email Report - ' + reportDate },
+        info: { Title: 'InboxInsights Email Digest', Author: 'InboxInsights', Subject: 'Email Report - ' + reportDate },
       });
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
       // Header
-      doc.rect(0, 0, 595, 100).fill('#1a3a5c');
+      doc.rect(0, 0, 595, 100).fill('#042f2e');
       doc.fontSize(26).font('Helvetica-Bold').fillColor('#ffffff')
-        .text('SMART EMAIL REPORT', 50, 30, { align: 'center' });
-      doc.fontSize(11).font('Helvetica').fillColor('#a8c8e8')
+        .text('INBOXINSIGHTS REPORT', 50, 30, { align: 'center' });
+      doc.fontSize(11).font('Helvetica').fillColor('#5eead4')
         .text(sanitizeText(userName) + '  |  ' + reportDate + '  |  Generated at ' + reportTime, 50, 65, { align: 'center' });
 
       doc.y = 120;
@@ -60,16 +60,16 @@ async function generateReport(emails, options = {}) {
           if (doc.y > 680) doc.addPage();
 
           // Account header bar
-          doc.rect(50, doc.y, 495, 28).fill('#e8f0fe');
-          doc.fontSize(11).font('Helvetica-Bold').fillColor('#1a3a5c')
+          doc.rect(50, doc.y, 495, 28).fill('#f0fdfa');
+          doc.fontSize(11).font('Helvetica-Bold').fillColor('#0f766e')
             .text('Account: ' + sanitizeText(account), 60, doc.y + 8 - 28 + 28, { width: 475 });
           doc.y += 8;
 
           accountEmails.forEach((email, index) => {
             if (doc.y > 720) doc.addPage();
-            doc.fontSize(10).font('Helvetica-Bold').fillColor('#333333')
+            doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b')
               .text((index + 1) + '. ' + sanitizeText(email.subject), 60, doc.y, { width: 460, indent: 0 });
-            doc.fontSize(8).font('Helvetica').fillColor('#888888')
+            doc.fontSize(8).font('Helvetica').fillColor('#64748b')
               .text('From: ' + sanitizeText(email.sender) + '  |  ' + sanitizeText(email.date), 72, doc.y, { width: 448 });
             doc.moveDown(0.3);
           });
@@ -81,10 +81,10 @@ async function generateReport(emails, options = {}) {
       if (doc.y > 700) doc.addPage();
       doc.moveDown(1);
       const footY = doc.y;
-      doc.rect(50, footY, 495, 60).fill('#f5f8fc');
+      doc.rect(50, footY, 495, 60).fill('#f0fdfa');
       const uniqueAccounts = emails ? [...new Set(emails.map(e => e.account))].length : 0;
       const totalEmails = emails ? emails.length : 0;
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#1a3a5c');
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#042f2e');
       doc.text('Total Gmail Accounts: ' + uniqueAccounts, 60, footY + 10);
       doc.text('Total Emails: ' + totalEmails, 60, footY + 25);
       doc.text('Report Generated At: ' + reportTime, 60, footY + 40);
