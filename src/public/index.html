@@ -1,306 +1,650 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InboxInsights - Smart Email Dashboard</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f0f2f5;
-      color: #333;
-      min-height: 100vh;
-    }
-    .header {
-      background: linear-gradient(135deg, #1a73e8, #0d47a1);
-      color: white;
-      padding: 20px 30px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    .header h1 { font-size: 24px; font-weight: 600; }
-    .header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 2px; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 25px 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartMail — Automated Email Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0f1b2d;--navy-light:#1a2d47;--blue:#2563eb;--blue-dark:#1d4ed8;
+  --blue-light:#3b82f6;--blue-muted:#93c5fd;--blue-pale:#dbeafe;--blue-bg:#eff6ff;
+  --text:#1e293b;--text-light:#64748b;--text-muted:#94a3b8;
+  --bg:#f8fafc;--white:#ffffff;--border:#e2e8f0;--border-light:#f1f5f9;
+  --green:#059669;--green-bg:#ecfdf5;--red:#dc2626;--red-bg:#fef2f2;
+  --amber:#d97706;--amber-bg:#fffbeb;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);--shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -4px rgba(0,0,0,0.1);
+  --radius:10px;--radius-lg:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 25px;
-    }
-    .stat-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      text-align: center;
-    }
-    .stat-card .value {
-      font-size: 32px;
-      font-weight: 700;
-      color: #1a73e8;
-    }
-    .stat-card .label {
-      font-size: 13px;
-      color: #666;
-      margin-top: 5px;
-    }
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:var(--navy);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,0.08)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px}
+.nav-logo{display:flex;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:18px}
+.nav-logo svg{width:28px;height:28px}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-links a{color:var(--blue-muted);font-size:13px;font-weight:500;padding:6px 14px;border-radius:6px;transition:all .2s}
+.nav-links a:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.nav-cta{background:var(--blue)!important;color:#fff!important;font-weight:600!important}
+.nav-cta:hover{background:var(--blue-dark)!important}
+.nav-toggle{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer}
 
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .card h2 {
-      font-size: 18px;
-      margin-bottom: 16px;
-      color: #1a73e8;
-      border-bottom: 2px solid #e8f0fe;
-      padding-bottom: 8px;
-    }
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 50%,#1e3a5f 100%);color:#fff;padding:80px 24px 70px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-100px;top:-60px;width:500px;height:500px;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);pointer-events:none}
+.hero-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.hero h1{font-size:44px;font-weight:800;line-height:1.15;letter-spacing:-0.02em}
+.hero h1 span{color:var(--blue-light)}
+.hero p{margin-top:16px;font-size:17px;color:var(--blue-muted);line-height:1.7;max-width:500px}
+.hero-actions{display:flex;gap:12px;margin-top:28px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 0 0 0 rgba(37,99,235,0.4)}
+.btn-primary:hover{background:var(--blue-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,0.4)}
+.btn-outline{background:transparent;color:var(--blue-muted);border:1.5px solid rgba(147,197,253,0.3)}
+.btn-outline:hover{border-color:var(--blue-muted);color:#fff;background:rgba(255,255,255,0.05)}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#047857}
+.btn-danger{background:var(--red);color:#fff;padding:6px 14px;font-size:12px}
+.btn-danger:hover{background:#b91c1c}
+.btn-sm{padding:8px 16px;font-size:13px}
+.btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--blue);background:var(--blue-bg)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+.hero-visual{display:flex;justify-content:center;align-items:center}
+.hero-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px;backdrop-filter:blur(10px);width:100%;max-width:380px}
+.hero-card h3{font-size:14px;color:var(--blue-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px}
+.hero-stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.hero-stat:last-child{border:none}
+.hero-stat .label{color:var(--text-muted);font-size:13px}
+.hero-stat .value{color:#fff;font-weight:600;font-size:13px}
+.demo-badge{display:inline-block;background:var(--amber);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em}
+.real-badge{display:inline-block;background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;text-transform:uppercase}
 
-    .account-list { list-style: none; }
-    .account-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .account-item:last-child { border-bottom: none; }
-    .account-email { font-weight: 500; }
-    .account-sync { font-size: 12px; color: #888; }
-    .account-remove {
-      background: #ff4444;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 4px 12px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    .account-remove:hover { background: #cc0000; }
+/* SECTIONS */
+.section{padding:70px 24px}
+.section-inner{max-width:1200px;margin:0 auto}
+.section-title{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-0.01em}
+.section-sub{color:var(--text-light);font-size:15px;margin-bottom:36px;max-width:600px}
 
-    .btn {
-      display: inline-block;
-      padding: 10px 24px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .btn-primary { background: #1a73e8; color: white; }
-    .btn-primary:hover { background: #1557b0; }
-    .btn-success { background: #0d904f; color: white; }
-    .btn-success:hover { background: #0a7a42; }
-    .btn-warning { background: #f9a825; color: #333; }
-    .btn-warning:hover { background: #f57f17; }
-    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.feature-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px 24px;transition:all .25s;cursor:default}
+.feature-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--blue-light)}
+.feature-icon{width:44px;height:44px;border-radius:10px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
+.feature-card h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.feature-card p{font-size:13px;color:var(--text-light);line-height:1.6}
 
-    .status-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    .status-active { background: #e6f4ea; color: #137333; }
-    .status-pending { background: #fef7e0; color: #b06000; }
-    .status-failed { background: #fce8e6; color: #c5221f; }
-    .status-sent { background: #e6f4ea; color: #137333; }
+/* HOW IT WORKS */
+.steps{display:flex;gap:0;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.step{text-align:center;flex:1;min-width:150px;max-width:200px;position:relative;padding:0 10px}
+.step-num{width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.step h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.step p{font-size:12px;color:var(--text-light)}
+.step-arrow{color:var(--blue-muted);font-size:20px;margin-top:14px;display:inline-block}
 
-    .scheduler-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .scheduler-info div { padding: 8px 0; }
-    .scheduler-info .label { font-size: 13px; color: #666; }
-    .scheduler-info .value { font-weight: 500; }
+/* SETUP FORM */
+.setup-section{background:linear-gradient(180deg,var(--blue-bg) 0%,var(--bg) 100%)}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.setup-form{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px;box-shadow:var(--shadow)}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.form-group .helper{font-size:11px;color:var(--text-muted);margin-top:4px}
+.form-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;color:var(--text);transition:border .2s;background:var(--white)}
+.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.form-input::placeholder{color:var(--text-muted)}
+select.form-input{cursor:pointer}
 
-    .report-info div { padding: 6px 0; }
-    .report-info .label { font-size: 13px; color: #666; display: inline-block; width: 150px; }
-    .report-info .value { font-weight: 500; }
+.accounts-list{margin-top:8px}
+.account-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--blue-bg);border-radius:8px;margin-bottom:8px;font-size:13px}
+.account-row .email{flex:1;font-weight:500;color:var(--navy)}
+.account-row .status{color:var(--green);font-size:12px;font-weight:600}
+.add-account-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:500;background:none;border:1.5px dashed var(--blue-light);border-radius:8px;padding:10px;width:100%;justify-content:center;cursor:pointer;transition:all .2s}
+.add-account-btn:hover{background:var(--blue-bg);border-color:var(--blue)}
 
-    .empty-state {
-      text-align: center;
-      padding: 30px;
-      color: #888;
-    }
-    .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+.setup-info{padding-top:20px}
+.setup-info h3{font-size:20px;font-weight:700;margin-bottom:12px}
+.setup-info p{color:var(--text-light);font-size:14px;margin-bottom:20px;line-height:1.7}
+.info-list{list-style:none}
+.info-list li{display:flex;align-items:flex-start;gap:10px;padding:8px 0;font-size:13px;color:var(--text-light)}
+.info-list li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:7px;flex-shrink:0}
 
-    .alert {
-      padding: 12px 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 14px;
-    }
-    .alert-success { background: #e6f4ea; color: #137333; }
-    .alert-error { background: #fce8e6; color: #c5221f; }
+/* DASHBOARD */
+.dash-section{background:var(--white);border-top:1px solid var(--border)}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:30px}
+.dash-stat{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius);padding:20px;transition:all .25s}
+.dash-stat:hover{border-color:var(--blue-light);box-shadow:var(--shadow)}
+.dash-stat .num{font-size:28px;font-weight:700;color:var(--navy)}
+.dash-stat .lbl{font-size:12px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px}
 
-    .loading { text-align: center; padding: 20px; color: #888; }
+.dash-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.dash-card{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:24px;transition:all .25s}
+.dash-card:hover{border-color:var(--blue-light);box-shadow:var(--shadow)}
+.dash-card h3{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.dash-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px}
+.dash-row:last-child{border:none}
+.dash-row .k{color:var(--text-light)}
+.dash-row .v{font-weight:500}
 
-    #notification { display: none; position: fixed; top: 20px; right: 20px; z-index: 100; }
-  </style>
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:var(--blue-pale);color:var(--blue)}
+
+.action-bar{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+#pipeline-result{margin-top:14px}
+
+/* ACCOUNTS LIST */
+.connected-list{list-style:none}
+.connected-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.connected-item:last-child{border:none}
+.connected-email{font-weight:500;font-size:13px}
+.connected-meta{font-size:11px;color:var(--text-muted)}
+
+/* ALERTS */
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px}
+.alert-success{background:var(--green-bg);color:var(--green);border:1px solid #a7f3d0}
+.alert-error{background:var(--red-bg);color:var(--red);border:1px solid #fecaca}
+.alert-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-pale)}
+.alert-demo{background:var(--amber-bg);color:var(--amber);border:1px solid #fde68a}
+
+/* SUCCESS STATE */
+.success-state{text-align:center;padding:30px}
+.success-state .icon{font-size:48px;margin-bottom:12px}
+.success-state h3{font-size:20px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.success-state p{color:var(--text-light);font-size:14px}
+.success-details{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;text-align:center}
+.success-details .item{background:var(--blue-bg);border-radius:8px;padding:12px}
+.success-details .item .val{font-size:18px;font-weight:700;color:var(--navy)}
+.success-details .item .lbl{font-size:11px;color:var(--text-muted)}
+
+/* FOOTER */
+.footer{background:var(--navy);color:rgba(255,255,255,0.5);padding:30px 24px;text-align:center;font-size:12px}
+.footer a{color:var(--blue-muted)}
+
+/* LOADING */
+.loading{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:8px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);padding:32px;max-width:460px;width:90%;box-shadow:var(--shadow-lg);position:relative}
+.modal h3{font-size:18px;font-weight:600;margin-bottom:16px}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero-inner{grid-template-columns:1fr}
+  .hero h1{font-size:32px}
+  .hero-visual{display:none}
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .setup-grid{grid-template-columns:1fr}
+  .dash-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-cards{grid-template-columns:1fr}
+  .steps{flex-direction:column;align-items:center}
+  .step-arrow{transform:rotate(90deg)}
+}
+@media(max-width:600px){
+  .nav-links{display:none}
+  .nav-links.open{display:flex;position:absolute;top:60px;left:0;right:0;background:var(--navy);flex-direction:column;padding:16px;gap:4px;border-bottom:1px solid rgba(255,255,255,0.1)}
+  .nav-toggle{display:block}
+  .features-grid{grid-template-columns:1fr}
+  .dash-grid{grid-template-columns:1fr}
+  .hero{padding:50px 24px 40px}
+  .hero h1{font-size:28px}
+  .section{padding:40px 16px}
+  .success-details{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>📧 InboxInsights</h1>
-      <div class="subtitle">Smart Email Dashboard</div>
+
+<!-- NAV -->
+<nav class="nav">
+<div class="nav-inner">
+  <div class="nav-logo">
+    <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#2563eb"/><path d="M6 9l8 5 8-5M6 9v10l8 5 8-5V9" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+    SmartMail
+  </div>
+  <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+  <div class="nav-links">
+    <a href="#overview">Overview</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#setup">Setup</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#setup" class="nav-cta">Get Started</a>
+  </div>
+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="overview">
+<div class="hero-inner">
+  <div>
+    <h1>Your Emails.<br><span>One Smart Report.</span></h1>
+    <p>Connect multiple Gmail accounts, collect your email subjects, generate a daily PDF report, and receive it automatically at your scheduled time.</p>
+    <div class="hero-actions">
+      <a href="#setup" class="btn btn-primary">Get Started</a>
+      <a href="#how-it-works" class="btn btn-outline">How It Works</a>
     </div>
-    <a href="/auth/google" class="btn btn-primary" style="background: white; color: #1a73e8;">+ Add Gmail Account</a>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card">
+      <h3>System Status</h3>
+      <div class="hero-stat"><span class="label">Accounts</span><span class="value" id="hero-accounts">—</span></div>
+      <div class="hero-stat"><span class="label">Total Emails</span><span class="value" id="hero-emails">—</span></div>
+      <div class="hero-stat"><span class="label">Next Report</span><span class="value" id="hero-schedule">—</span></div>
+      <div class="hero-stat"><span class="label">Delivery</span><span class="value" id="hero-delivery">—</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+<div class="section-inner">
+  <div class="section-title">What is SmartMail?</div>
+  <div class="section-sub">SmartMail brings emails from multiple Gmail accounts into one automated reporting workflow — no more checking every inbox separately.</div>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">&#128233;</div><h3>Multiple Accounts</h3><p>Connect unlimited Gmail accounts through secure Google OAuth 2.0 authentication.</p></div>
+    <div class="feature-card"><div class="feature-icon">&#128196;</div><h3>PDF Reports</h3><p>Automatically generate clean, professional PDF reports with email subjects.</p></div>
+    <div class="feature-card"><div class="feature-icon">&#9200;</div><h3>Scheduled Delivery</h3><p>Set your preferred time and receive reports daily without manual effort.</p></div>
+    <div class="feature-card"><div class="feature-icon">&#128274;</div><h3>Secure &amp; Private</h3><p>OAuth 2.0 authentication. No passwords stored. Minimum required permissions.</p></div>
+  </div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="background:var(--white)" id="how-it-works">
+<div class="section-inner">
+  <div class="section-title" style="text-align:center">How It Works</div>
+  <div class="section-sub" style="text-align:center;margin:8px auto 40px">Five simple steps to automated email reporting.</div>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><h4>Connect Gmail</h4><p>Authenticate via Google OAuth</p></div>
+    <div class="step"><span class="step-arrow">&#8594;</span></div>
+    <div class="step"><div class="step-num">2</div><h4>Collect Emails</h4><p>Fetch from all accounts</p></div>
+    <div class="step"><span class="step-arrow">&#8594;</span></div>
+    <div class="step"><div class="step-num">3</div><h4>Extract Subjects</h4><p>Parse key information</p></div>
+    <div class="step"><span class="step-arrow">&#8594;</span></div>
+    <div class="step"><div class="step-num">4</div><h4>Generate PDF</h4><p>Create structured report</p></div>
+    <div class="step"><span class="step-arrow">&#8594;</span></div>
+    <div class="step"><div class="step-num">5</div><h4>Deliver</h4><p>WhatsApp or Download</p></div>
+  </div>
+</div>
+</section>
+
+<!-- SETUP FORM -->
+<section class="section setup-section" id="setup">
+<div class="section-inner">
+  <div class="section-title">Set Up Your Daily Email Report</div>
+  <div class="section-sub">Register, connect your Gmail accounts, and configure your schedule.</div>
+  <div id="auth-alert"></div>
+  <div id="setup-container">
+    <!-- Filled by JS: either form or success state -->
+    <div class="loading-text"><span class="loading"></span> Loading...</div>
+  </div>
+</div>
+</section>
+
+<!-- DASHBOARD -->
+<section class="section dash-section" id="dashboard">
+<div class="section-inner">
+  <div class="section-title" id="dash-welcome">Dashboard</div>
+  <div class="section-sub">Monitor your accounts, reports, and schedule.</div>
+
+  <div class="dash-grid">
+    <div class="dash-stat"><div class="num" id="d-accounts">—</div><div class="lbl">Connected Accounts</div></div>
+    <div class="dash-stat"><div class="num" id="d-emails">—</div><div class="lbl">Emails Collected</div></div>
+    <div class="dash-stat"><div class="num" id="d-reports">—</div><div class="lbl">Reports Generated</div></div>
+    <div class="dash-stat"><div class="num" id="d-scheduler">—</div><div class="lbl">Scheduler</div></div>
   </div>
 
-  <div id="notification"></div>
-
-  <div class="container">
-    <div id="auth-alert"></div>
-
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card"><div class="value" id="stat-accounts">-</div><div class="label">Connected Accounts</div></div>
-      <div class="stat-card"><div class="value" id="stat-emails">-</div><div class="label">Total Emails Collected</div></div>
-      <div class="stat-card"><div class="value" id="stat-reports">-</div><div class="label">Reports Generated</div></div>
-      <div class="stat-card"><div class="value" id="stat-scheduler">-</div><div class="label">Scheduler</div></div>
+  <div class="dash-cards">
+    <div class="dash-card">
+      <h3>&#128233; Connected Accounts</h3>
+      <div id="d-accounts-list"><div class="loading-text"><span class="loading"></span> Loading</div></div>
     </div>
-
-    <div class="card">
-      <h2>📥 Connected Gmail Accounts</h2>
-      <div id="accounts-list"><div class="loading">Loading...</div></div>
+    <div class="dash-card">
+      <h3>&#128197; Schedule &amp; Delivery</h3>
+      <div id="d-schedule-info"><div class="loading-text"><span class="loading"></span> Loading</div></div>
     </div>
-
-    <div class="card">
-      <h2>⏰ Scheduler</h2>
-      <div class="scheduler-info" id="scheduler-info"><div class="loading">Loading...</div></div>
+    <div class="dash-card" style="grid-column:1/-1">
+      <h3>&#128196; Latest Report</h3>
+      <div id="d-report-info"><div class="loading-text"><span class="loading"></span> Loading</div></div>
     </div>
-
-    <div class="card">
-      <h2>📄 Latest Report</h2>
-      <div class="report-info" id="report-info"><div class="loading">Loading...</div></div>
-    </div>
-
-    <div class="card">
-      <h2>⚡ Actions</h2>
-      <p style="margin-bottom: 10px; color: #666; font-size: 14px;">Manually trigger the email report pipeline.</p>
-      <div class="btn-group">
-        <button class="btn btn-warning" onclick="runPipeline(false)">🧪 Test Run (No WhatsApp)</button>
-        <button class="btn btn-success" onclick="runPipeline(true)">📤 Run & Send WhatsApp</button>
+    <div class="dash-card" style="grid-column:1/-1">
+      <h3>&#9889; Actions</h3>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">Manually trigger the email report pipeline for testing or demonstration.</p>
+      <div class="action-bar">
+        <button class="btn btn-ghost btn-sm" id="btn-test-demo" onclick="triggerPipeline(false,true)">&#129514; Demo Test Run</button>
+        <button class="btn btn-ghost btn-sm" id="btn-test-real" onclick="triggerPipeline(false,false)">&#128218; Real Test (No Delivery)</button>
+        <button class="btn btn-primary btn-sm" id="btn-run" onclick="triggerPipeline(true,false)">&#128228; Run &amp; Deliver</button>
       </div>
-      <div id="pipeline-result" style="margin-top: 15px;"></div>
+      <div id="pipeline-result"></div>
     </div>
   </div>
+</div>
+</section>
 
-  <script>
-    // Check URL params for auth result
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('auth') === 'success') {
-      document.getElementById('auth-alert').innerHTML =
-        `<div class="alert alert-success">✅ Gmail account ${params.get('email') || ''} connected successfully!</div>`;
-      window.history.replaceState({}, '', '/');
-    } else if (params.get('auth') === 'error') {
-      document.getElementById('auth-alert').innerHTML =
-        `<div class="alert alert-error">❌ Authentication failed: ${params.get('message') || 'Unknown error'}</div>`;
-      window.history.replaceState({}, '', '/');
+<!-- FOOTER -->
+<footer class="footer">
+  <p>SmartMail &mdash; Automated Email Reporting &bull; Built with &#128153; &bull; <a href="https://github.com/1767srishtisingh-web/InboxInsights" target="_blank">GitHub</a></p>
+</footer>
+
+<!-- DEMO ACCOUNT MODAL -->
+<div class="modal-overlay" id="demoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDemoModal()">&times;</button>
+    <h3>Add Demo Account</h3>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">Add a demo Gmail account for testing. No real OAuth is needed.</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" class="form-input" id="demo-email" placeholder="demo@gmail.com">
+    </div>
+    <div class="form-group">
+      <label>Display Name (optional)</label>
+      <input type="text" class="form-input" id="demo-name" placeholder="Demo Account">
+    </div>
+    <button class="btn btn-primary" onclick="addDemoAccount()">Add Demo Account</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let appState = { user: null, accounts: [], scheduler: {}, latestReport: null, deliveryMode: 'demo', oauthConfigured: false };
+
+// Check URL auth params
+const params = new URLSearchParams(location.search);
+if (params.get('auth') === 'success') {
+  showAlert('auth-alert', 'success', 'Gmail account ' + (params.get('email')||'') + ' connected successfully!');
+  history.replaceState({}, '', '/');
+} else if (params.get('auth') === 'error') {
+  showAlert('auth-alert', 'error', 'Authentication failed: ' + (params.get('message')||'Unknown error'));
+  history.replaceState({}, '', '/');
+}
+
+function showAlert(id, type, msg) {
+  document.getElementById(id).innerHTML = '<div class="alert alert-'+type+'">'+escHtml(msg)+'</div>';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function api(url, opts) {
+  const r = await fetch(API + url, opts);
+  return r.json();
+}
+
+async function loadDashboard() {
+  try {
+    const data = await api('/api/dashboard');
+    if (!data.success) return;
+    const d = data.data;
+    appState = { user: d.user, accounts: d.accounts, scheduler: d.scheduler, latestReport: d.latestReport, deliveryMode: d.deliveryMode, oauthConfigured: d.oauthConfigured, stats: d };
+
+    // Hero stats
+    document.getElementById('hero-accounts').textContent = d.activeAccounts;
+    document.getElementById('hero-emails').textContent = d.totalEmailsCollected;
+    document.getElementById('hero-schedule').textContent = d.scheduler.running ? (d.scheduler.reportTime + ' ' + d.scheduler.timezone) : 'Not set';
+    const dm = d.deliveryMode;
+    document.getElementById('hero-delivery').innerHTML = dm === 'twilio' ? '<span class="real-badge">WhatsApp</span>' : '<span class="demo-badge">Demo</span>';
+
+    // Dashboard stats
+    document.getElementById('d-accounts').textContent = d.activeAccounts;
+    document.getElementById('d-emails').textContent = d.totalEmailsCollected;
+    document.getElementById('d-reports').textContent = d.totalReportsGenerated;
+    document.getElementById('d-scheduler').textContent = d.scheduler.running ? 'Active' : 'Off';
+
+    // Welcome
+    if (d.user) {
+      document.getElementById('dash-welcome').textContent = 'Welcome, ' + d.user.name + '.';
     }
 
-    async function loadDashboard() {
-      try {
-        const res = await fetch('/api/dashboard');
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        const d = data.data;
+    // Accounts list
+    renderAccountsList(d.accounts);
+    // Schedule info
+    renderScheduleInfo(d.scheduler, d.deliveryMode);
+    // Report info
+    renderReportInfo(d.latestReport);
+    // Setup section
+    renderSetup(d);
+  } catch(e) { console.error('Dashboard load error:', e); }
+}
 
-        // Stats
-        document.getElementById('stat-accounts').textContent = d.activeAccounts;
-        document.getElementById('stat-emails').textContent = d.totalEmailsCollected;
-        document.getElementById('stat-reports').textContent = d.totalReportsGenerated;
-        document.getElementById('stat-scheduler').textContent = d.scheduler.running ? '✅ Active' : '❌ Off';
+function renderSetup(d) {
+  const c = document.getElementById('setup-container');
+  if (d.user) {
+    // Show success state + management
+    let acctHtml = '';
+    d.accounts.forEach(a => {
+      acctHtml += '<div class="account-row"><span class="status">&#10003;</span><span class="email">' + escHtml(a.email) + '</span>' + (a.isDemo ? '<span class="demo-badge">Demo</span>' : '<span class="real-badge">Real</span>') + '</div>';
+    });
+    c.innerHTML = `
+    <div class="setup-grid">
+      <div class="setup-form">
+        <div class="success-state">
+          <div class="icon">&#10003;</div>
+          <h3>Setup Complete</h3>
+          <p>Your email report is scheduled.</p>
+          <div class="success-details">
+            <div class="item"><div class="val">${d.user.report_time || '20:00'}</div><div class="lbl">${d.user.timezone || 'Asia/Kolkata'}</div></div>
+            <div class="item"><div class="val">${d.activeAccounts}</div><div class="lbl">Accounts</div></div>
+            <div class="item"><div class="val">${d.user.whatsapp_number ? escHtml(maskPhone(d.user.whatsapp_number)) : 'Not set'}</div><div class="lbl">WhatsApp</div></div>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px">Connected Accounts</h4>
+        ${acctHtml}
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          ${d.oauthConfigured ? '<a href="/auth/google" class="btn btn-ghost btn-sm">+ Connect Gmail</a>' : ''}
+          <button class="btn btn-ghost btn-sm" onclick="openDemoModal()">+ Add Demo Account</button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+        <h4 style="font-size:14px;font-weight:600;margin-bottom:12px">Update Settings</h4>
+        <div class="form-group"><label>Name</label><input class="form-input" id="edit-name" value="${escHtml(d.user.name)}"></div>
+        <div class="form-group"><label>WhatsApp Number</label><input class="form-input" id="edit-phone" value="${escHtml(d.user.whatsapp_number||'')}" placeholder="+91 XXXXX XXXXX"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label>Report Time</label><input type="time" class="form-input" id="edit-time" value="${d.user.report_time||'20:00'}"></div>
+          <div class="form-group"><label>Timezone</label><select class="form-input" id="edit-tz">
+            <option ${(d.user.timezone||'Asia/Kolkata')==='Asia/Kolkata'?'selected':''}>Asia/Kolkata</option>
+            <option ${(d.user.timezone)==='US/Eastern'?'selected':''}>US/Eastern</option>
+            <option ${(d.user.timezone)==='US/Pacific'?'selected':''}>US/Pacific</option>
+            <option ${(d.user.timezone)==='Europe/London'?'selected':''}>Europe/London</option>
+            <option ${(d.user.timezone)==='Asia/Tokyo'?'selected':''}>Asia/Tokyo</option>
+          </select></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="updateSettings()">Save Changes</button>
+      </div>
+      <div class="setup-info">
+        <h3>Your Dashboard is Ready</h3>
+        <p>Your SmartMail system is configured and running. The scheduler will automatically generate reports at your set time.</p>
+        <ul class="info-list">
+          <li>Use "Demo Test Run" to generate a sample report instantly</li>
+          <li>Download generated PDFs from the Dashboard section</li>
+          <li>Connect real Gmail accounts for live data</li>
+          <li>Configure Twilio credentials in .env for real WhatsApp delivery</li>
+        </ul>
+        ${d.deliveryMode === 'demo' ? '<div class="alert alert-demo" style="margin-top:16px">Demo Mode active — PDF reports are generated and available for download. Configure Twilio for real WhatsApp delivery.</div>' : '<div class="alert alert-success" style="margin-top:16px">Twilio configured — Reports will be sent via WhatsApp.</div>'}
+      </div>
+    </div>`;
+  } else {
+    // Show registration form
+    c.innerHTML = `
+    <div class="setup-grid">
+      <div class="setup-form">
+        <h3 style="font-size:18px;margin-bottom:20px">Create Your Report Schedule</h3>
+        <div class="form-group"><label>Full Name</label><input class="form-input" id="reg-name" placeholder="Srishti Singh"></div>
+        <div class="form-group">
+          <label>Gmail Accounts</label>
+          <div id="reg-accounts"></div>
+          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+            ${d.oauthConfigured ? '<a href="/auth/google" class="btn btn-ghost btn-sm">+ Connect Gmail (OAuth)</a>' : '<span class="alert alert-info" style="font-size:12px;padding:6px 10px">OAuth not configured — use Demo accounts</span>'}
+            <button class="btn btn-ghost btn-sm" onclick="openDemoModal()">+ Add Demo Account</button>
+          </div>
+        </div>
+        <div class="form-group"><label>WhatsApp Number</label><input class="form-input" id="reg-phone" placeholder="+91 XXXXX XXXXX"><div class="helper">Optional — leave empty for demo mode</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label>Report Time</label><input type="time" class="form-input" id="reg-time" value="20:00"></div>
+          <div class="form-group"><label>Timezone</label><select class="form-input" id="reg-tz">
+            <option selected>Asia/Kolkata</option><option>US/Eastern</option><option>US/Pacific</option><option>Europe/London</option><option>Asia/Tokyo</option>
+          </select></div>
+        </div>
+        <button class="btn btn-primary" onclick="register()" style="width:100%">Create My Report Schedule</button>
+        <div id="reg-error" style="margin-top:10px"></div>
+      </div>
+      <div class="setup-info">
+        <h3>Get Started in Minutes</h3>
+        <p>SmartMail automates your daily email digest. Set it up once and receive a beautifully formatted PDF report every day.</p>
+        <ul class="info-list">
+          <li>Connect one or more Gmail accounts using Google OAuth 2.0</li>
+          <li>Or use Demo accounts to try the system instantly</li>
+          <li>Set your preferred report delivery time</li>
+          <li>Your data stays private — no passwords stored</li>
+          <li>Download or receive reports via WhatsApp</li>
+        </ul>
+      </div>
+    </div>`;
+    renderRegAccounts();
+  }
+}
 
-        // Accounts
-        if (d.accounts.length === 0) {
-          document.getElementById('accounts-list').innerHTML =
-            `<div class="empty-state"><div class="icon">📭</div><p>No Gmail accounts connected yet.</p><p style="margin-top:8px;"><a href="/auth/google" class="btn btn-primary">Connect Gmail Account</a></p></div>`;
-        } else {
-          let html = '<ul class="account-list">';
-          for (const a of d.accounts) {
-            html += `<li class="account-item">
-              <div><div class="account-email">${a.email}</div>
-              <div class="account-sync">Last sync: ${a.lastSync || 'Never'}</div></div>
-              <button class="account-remove" onclick="removeAccount('${a.email}')">Remove</button>
-            </li>`;
-          }
-          html += '</ul>';
-          document.getElementById('accounts-list').innerHTML = html;
-        }
+function renderRegAccounts() {
+  const el = document.getElementById('reg-accounts');
+  if (!el) return;
+  if (appState.accounts.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No accounts connected yet. Add a Gmail or Demo account above.</div>';
+  } else {
+    el.innerHTML = appState.accounts.map(a => '<div class="account-row"><span class="status">&#10003;</span><span class="email">'+escHtml(a.email)+'</span>'+(a.isDemo?'<span class="demo-badge">Demo</span>':'<span class="real-badge">Real</span>')+'</div>').join('');
+  }
+}
 
-        // Scheduler
-        const s = d.scheduler;
-        document.getElementById('scheduler-info').innerHTML = `
-          <div><div class="label">Status</div><div class="value"><span class="status-badge ${s.running ? 'status-active' : 'status-failed'}">${s.running ? 'Active' : 'Inactive'}</span></div></div>
-          <div><div class="label">Report Time</div><div class="value">${s.reportTime}</div></div>
-          <div><div class="label">Timezone</div><div class="value">${s.timezone}</div></div>
-          <div><div class="label">Cron Expression</div><div class="value">${s.cronExpression}</div></div>
-        `;
+function renderAccountsList(accounts) {
+  const el = document.getElementById('d-accounts-list');
+  if (accounts.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">No accounts connected.</div>';
+    return;
+  }
+  el.innerHTML = '<ul class="connected-list">' + accounts.map(a =>
+    '<li class="connected-item"><div><div class="connected-email">'+escHtml(a.email)+'</div><div class="connected-meta">Last sync: '+(a.lastSync||'Never')+' '+(a.isDemo?'<span class="demo-badge">Demo</span>':'<span class="real-badge">Real</span>')+'</div></div><button class="btn btn-danger" onclick="removeAccount(\''+encodeURIComponent(a.email)+'\')">Remove</button></li>'
+  ).join('') + '</ul>';
+}
 
-        // Latest report
-        const r = d.latestReport;
-        if (r) {
-          document.getElementById('report-info').innerHTML = `
-            <div><span class="label">Report Date:</span><span class="value">${r.report_date}</span></div>
-            <div><span class="label">Accounts Processed:</span><span class="value">${r.total_accounts}</span></div>
-            <div><span class="label">Emails Collected:</span><span class="value">${r.total_emails}</span></div>
-            <div><span class="label">PDF Status:</span><span class="value"><span class="status-badge status-${r.generation_status === 'success' ? 'active' : 'failed'}">${r.generation_status}</span></span></div>
-            <div><span class="label">WhatsApp Status:</span><span class="value"><span class="status-badge status-${r.whatsapp_status === 'sent' ? 'sent' : r.whatsapp_status === 'failed' ? 'failed' : 'pending'}">${r.whatsapp_status}</span></span></div>
-            <div><span class="label">Generated At:</span><span class="value">${r.created_at}</span></div>
-            ${r.error_message ? `<div><span class="label">Error:</span><span class="value" style="color:#c5221f;">${r.error_message}</span></div>` : ''}
-          `;
-        } else {
-          document.getElementById('report-info').innerHTML =
-            '<div class="empty-state"><div class="icon">📄</div><p>No reports generated yet.</p></div>';
-        }
-      } catch (err) {
-        console.error('Dashboard load error:', err);
-      }
+function renderScheduleInfo(sched, deliveryMode) {
+  const el = document.getElementById('d-schedule-info');
+  el.innerHTML = `
+    <div class="dash-row"><span class="k">Status</span><span class="v"><span class="badge ${sched.running?'badge-green':'badge-red'}">${sched.running?'Active':'Inactive'}</span></span></div>
+    <div class="dash-row"><span class="k">Report Time</span><span class="v">${sched.reportTime}</span></div>
+    <div class="dash-row"><span class="k">Timezone</span><span class="v">${sched.timezone}</span></div>
+    <div class="dash-row"><span class="k">Delivery Mode</span><span class="v">${deliveryMode==='twilio'?'<span class="badge badge-green">WhatsApp (Twilio)</span>':'<span class="badge badge-amber">Demo (Download)</span>'}</span></div>
+  `;
+}
+
+function renderReportInfo(r) {
+  const el = document.getElementById('d-report-info');
+  if (!r) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No reports generated yet. Run a test to create your first report!</div>';
+    return;
+  }
+  const genBadge = r.generation_status==='success'?'badge-green':r.generation_status==='failed'?'badge-red':'badge-amber';
+  const delBadge = r.delivery_status==='sent'?'badge-green':r.delivery_status==='failed'?'badge-red':'badge-amber';
+  el.innerHTML = `
+    <div class="dash-row"><span class="k">Report Date</span><span class="v">${r.report_date}</span></div>
+    <div class="dash-row"><span class="k">Accounts</span><span class="v">${r.total_accounts}</span></div>
+    <div class="dash-row"><span class="k">Emails</span><span class="v">${r.total_emails}</span></div>
+    <div class="dash-row"><span class="k">PDF Status</span><span class="v"><span class="badge ${genBadge}">${r.generation_status}</span></span></div>
+    <div class="dash-row"><span class="k">Delivery</span><span class="v"><span class="badge ${delBadge}">${r.delivery_status}</span> ${r.delivery_method?'('+r.delivery_method+')':''}</span></div>
+    <div class="dash-row"><span class="k">Generated</span><span class="v">${r.created_at}</span></div>
+    ${r.error_message?'<div class="dash-row"><span class="k">Error</span><span class="v" style="color:var(--red)">'+escHtml(r.error_message)+'</span></div>':''}
+    ${r.generation_status==='success'?'<div style="margin-top:12px"><a href="/api/reports/download" class="btn btn-primary btn-sm" target="_blank">&#128196; Download PDF</a></div>':''}
+  `;
+}
+
+function maskPhone(p) {
+  if (!p || p.length < 6) return p || '';
+  return p.substring(0, 4) + '****' + p.substring(p.length - 3);
+}
+
+// --- Actions ---
+
+async function register() {
+  const name = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const time = document.getElementById('reg-time').value;
+  const tz = document.getElementById('reg-tz').value;
+  if (!name) { showAlert('reg-error','error','Please enter your name.'); return; }
+  const res = await api('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,whatsappNumber:phone,reportTime:time,timezone:tz}) });
+  if (res.success) { loadDashboard(); } else { showAlert('reg-error','error',res.error); }
+}
+
+async function updateSettings() {
+  const name = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim();
+  const time = document.getElementById('edit-time').value;
+  const tz = document.getElementById('edit-tz').value;
+  if (!name) return;
+  await api('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,whatsappNumber:phone,reportTime:time,timezone:tz}) });
+  loadDashboard();
+}
+
+async function removeAccount(email) {
+  if (!confirm('Remove ' + decodeURIComponent(email) + '?')) return;
+  await api('/api/accounts/' + email, { method:'DELETE' });
+  loadDashboard();
+}
+
+function openDemoModal() { document.getElementById('demoModal').classList.add('active'); }
+function closeDemoModal() { document.getElementById('demoModal').classList.remove('active'); }
+
+async function addDemoAccount() {
+  const email = document.getElementById('demo-email').value.trim();
+  const name = document.getElementById('demo-name').value.trim();
+  if (!email) return;
+  await api('/api/accounts/demo', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, displayName:name||email}) });
+  closeDemoModal();
+  document.getElementById('demo-email').value = '';
+  document.getElementById('demo-name').value = '';
+  loadDashboard();
+}
+
+async function triggerPipeline(deliver, demo) {
+  const btns = document.querySelectorAll('.action-bar .btn');
+  btns.forEach(b => b.disabled = true);
+  const rd = document.getElementById('pipeline-result');
+  rd.innerHTML = '<div class="loading-text"><span class="loading"></span> Running pipeline... this may take a moment.</div>';
+
+  try {
+    const url = deliver ? '/api/run?force=true' + (demo?'&demo=true':'') : '/api/run/test?force=true' + (demo?'&demo=true':'');
+    const res = await api(url, { method:'POST' });
+    if (res.success) {
+      const r = res.result;
+      const method = r.delivery && r.delivery.method ? r.delivery.method : 'test';
+      rd.innerHTML = '<div class="alert alert-success">Pipeline completed! Emails: '+(r.emailFetch?r.emailFetch.totalEmails:0)+' | PDF: '+(r.pdfGeneration&&r.pdfGeneration.success?'Generated':'Failed')+' | Delivery: '+method+'</div>' + (r.pdfGeneration&&r.pdfGeneration.success?'<a href="/api/reports/download" class="btn btn-primary btn-sm" target="_blank" style="margin-top:8px">Download PDF</a>':'');
+    } else {
+      rd.innerHTML = '<div class="alert alert-error">Pipeline failed: '+ escHtml(res.result?res.result.error:res.error||'Unknown') +'</div>';
     }
-
-    async function removeAccount(email) {
-      if (!confirm(`Remove ${email}?`)) return;
-      try {
-        await fetch(`/api/accounts/${encodeURIComponent(email)}`, { method: 'DELETE' });
-        loadDashboard();
-      } catch (err) {
-        alert('Failed to remove account: ' + err.message);
-      }
-    }
-
-    async function runPipeline(sendWhatsApp) {
-      const resultDiv = document.getElementById('pipeline-result');
-      resultDiv.innerHTML = '<div class="loading">⏳ Running pipeline... This may take a minute.</div>';
-
-      try {
-        const url = sendWhatsApp ? '/api/run?force=true' : '/api/run/test?force=true';
-        const res = await fetch(url, { method: 'POST' });
-        const data = await res.json();
-
-        if (data.success) {
-          resultDiv.innerHTML = `<div class="alert alert-success">✅ Pipeline completed successfully!<br>Emails: ${data.result?.emailFetch?.totalEmails || 0} | PDF: ${data.result?.pdfGeneration?.success ? 'Generated' : 'Failed'}${sendWhatsApp ? ' | WhatsApp: ' + (data.result?.whatsappDelivery?.success ? 'Sent' : 'Failed') : ''}</div>`;
-        } else {
-          resultDiv.innerHTML = `<div class="alert alert-error">❌ Pipeline failed: ${data.result?.error || data.error || 'Unknown error'}</div>`;
-        }
-        loadDashboard();
-      } catch (err) {
-        resultDiv.innerHTML = `<div class="alert alert-error">❌ Error: ${err.message}</div>`;
-      }
-    }
-
-    // Initial load
     loadDashboard();
-    // Auto refresh every 30 seconds
-    setInterval(loadDashboard, 30000);
-  </script>
+  } catch(e) {
+    rd.innerHTML = '<div class="alert alert-error">Error: '+escHtml(e.message)+'</div>';
+  } finally {
+    btns.forEach(b => b.disabled = false);
+  }
+}
+
+// Init
+loadDashboard();
+setInterval(loadDashboard, 30000);
+</script>
 </body>
 </html>

@@ -4,61 +4,56 @@ const logger = require('./logger');
 
 let scheduledTask = null;
 let isRunning = false;
+let currentReportTime = null;
+let currentTimezone = null;
 
-/**
- * Parse the configured report time (HH:MM) into cron format.
- * @returns {string} Cron expression
- */
-function getCronExpression() {
-  const [hours, minutes] = config.scheduler.reportTime.split(':');
-  // Cron: minute hour * * *
-  return `${parseInt(minutes, 10)} ${parseInt(hours, 10)} * * *`;
+function getCronExpression(reportTime) {
+  const time = reportTime || config.scheduler.reportTime || '20:00';
+  const parts = time.split(':');
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  if (isNaN(hours) || isNaN(minutes)) {
+    logger.error('Invalid report time: ' + time + ', defaulting to 20:00');
+    return '0 20 * * *';
+  }
+  return minutes + ' ' + hours + ' * * *';
 }
 
-/**
- * Start the daily report scheduler.
- * @param {Function} pipelineCallback - Async function to execute the report pipeline
- */
-function startScheduler(pipelineCallback) {
+function startScheduler(pipelineCallback, reportTime, timezone) {
   if (scheduledTask) {
     logger.warn('Scheduler is already running');
     return;
   }
+  currentReportTime = reportTime || config.scheduler.reportTime;
+  currentTimezone = timezone || config.scheduler.timezone;
+  const cronExpr = getCronExpression(currentReportTime);
 
-  const cronExpr = getCronExpression();
-  const timezone = config.scheduler.timezone;
-
-  logger.info(`Scheduler started: will run at ${config.scheduler.reportTime} (${timezone})`);
-  logger.info(`Cron expression: ${cronExpr}`);
+  logger.info('Scheduler started: will run at ' + currentReportTime + ' (' + currentTimezone + ')');
+  logger.info('Cron expression: ' + cronExpr);
 
   scheduledTask = cron.schedule(cronExpr, async () => {
     if (isRunning) {
       logger.warn('Previous scheduled run still in progress. Skipping this trigger.');
       return;
     }
-
     isRunning = true;
-    logger.info('=== Scheduled report triggered ===' );
+    logger.info('=== Scheduled report triggered ===');
     const startTime = Date.now();
-
     try {
       await pipelineCallback();
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-      logger.info(`Scheduled report completed in ${elapsed}s`);
+      logger.info('Scheduled report completed in ' + elapsed + 's');
     } catch (error) {
-      logger.error(`Scheduled report failed: ${error.message}`);
+      logger.error('Scheduled report failed: ' + error.message);
     } finally {
       isRunning = false;
     }
   }, {
     scheduled: true,
-    timezone: timezone,
+    timezone: currentTimezone,
   });
 }
 
-/**
- * Stop the scheduler.
- */
 function stopScheduler() {
   if (scheduledTask) {
     scheduledTask.stop();
@@ -67,21 +62,20 @@ function stopScheduler() {
   }
 }
 
-/**
- * Get the current scheduler status.
- */
+function restartScheduler(reportTime, timezone, pipelineCallback) {
+  stopScheduler();
+  startScheduler(pipelineCallback, reportTime, timezone);
+  logger.info('Scheduler restarted with new time: ' + reportTime + ' (' + timezone + ')');
+}
+
 function getSchedulerStatus() {
   return {
     running: scheduledTask !== null,
-    reportTime: config.scheduler.reportTime,
-    timezone: config.scheduler.timezone,
-    cronExpression: getCronExpression(),
+    reportTime: currentReportTime || config.scheduler.reportTime,
+    timezone: currentTimezone || config.scheduler.timezone,
+    cronExpression: getCronExpression(currentReportTime),
     isPipelineRunning: isRunning,
   };
 }
 
-module.exports = {
-  startScheduler,
-  stopScheduler,
-  getSchedulerStatus,
-};
+module.exports = { startScheduler, stopScheduler, restartScheduler, getSchedulerStatus };

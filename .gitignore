@@ -1,7 +1,5 @@
 node_modules/
 .env
 data/
-tokens/
-reports/
 *.db
 *.pdf

@@ -1,76 +1,74 @@
-const twilio = require('twilio');
 const config = require('./config');
 const logger = require('./logger');
 
 /**
- * Send a PDF report via WhatsApp using Twilio.
- * @param {string} pdfFilePath - Absolute path to the PDF file
- * @param {string} message - Message to accompany the PDF
- * @returns {Promise<{success: boolean, sid: string|null, error: string|null}>}
+ * Delivery provider abstraction.
+ * Supports: 'twilio' (real WhatsApp via Twilio) and 'demo' (log-only demo mode).
  */
-async function sendReportViaWhatsApp(pdfFilePath, message = 'Your daily email report is ready.') {
-  logger.info('WhatsApp sending started');
 
-  // Validate configuration
-  if (!config.twilio.accountSid || !config.twilio.authToken) {
-    const error = 'Twilio credentials not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN.';
-    logger.error(error);
-    return { success: false, sid: null, error };
+function getDeliveryMode() {
+  if (config.twilio.accountSid && config.twilio.authToken && config.twilio.whatsappTo) {
+    return 'twilio';
   }
+  return 'demo';
+}
 
-  if (!config.twilio.whatsappTo) {
-    const error = 'WhatsApp recipient not configured. Set WHATSAPP_TO.';
-    logger.error(error);
-    return { success: false, sid: null, error };
+async function sendViaTwilio(message, mediaUrl) {
+  const twilio = require('twilio');
+  const client = twilio(config.twilio.accountSid, config.twilio.authToken);
+  const msgOptions = {
+    from: config.twilio.whatsappFrom,
+    to: config.twilio.whatsappTo,
+    body: message,
+  };
+  if (mediaUrl) {
+    msgOptions.mediaUrl = [mediaUrl];
+  }
+  const result = await client.messages.create(msgOptions);
+  return { sid: result.sid };
+}
+
+async function sendReportViaWhatsApp(pdfFilePath, message) {
+  const defaultMsg = message || 'Your daily email report is ready.';
+  const mode = getDeliveryMode();
+  logger.info('Delivery started (mode: ' + mode + ')');
+
+  if (mode === 'demo') {
+    logger.info('[DEMO MODE] WhatsApp delivery simulated');
+    logger.info('[DEMO MODE] Message: ' + defaultMsg);
+    logger.info('[DEMO MODE] PDF available at: ' + pdfFilePath);
+    return {
+      success: true,
+      sid: 'DEMO_' + Date.now(),
+      method: 'demo',
+      error: null,
+      message: 'Demo mode - PDF generated and available for download. Configure Twilio for real WhatsApp delivery.',
+    };
   }
 
   try {
-    const client = twilio(config.twilio.accountSid, config.twilio.authToken);
-
-    // For Twilio WhatsApp, we need the PDF to be accessible via URL.
-    // In production, you'd host the file. For now, we send a text message
-    // with the report info. To send media, the PDF must be at a public URL.
-    // 
-    // If you have a public URL for serving reports, set it in the config.
-    // Otherwise, this sends a text summary with the report available locally.
-
     const fs = require('fs');
     if (!fs.existsSync(pdfFilePath)) {
-      const error = `PDF file not found: ${pdfFilePath}`;
-      logger.error(error);
-      return { success: false, sid: null, error };
+      return { success: false, sid: null, method: 'twilio', error: 'PDF file not found: ' + pdfFilePath };
     }
 
-    const messageOptions = {
-      from: config.twilio.whatsappFrom,
-      to: config.twilio.whatsappTo,
-      body: message,
-    };
-
-    // If a public base URL is configured, include the PDF as media
     const publicBaseUrl = process.env.PUBLIC_REPORT_URL;
+    let mediaUrl = null;
     if (publicBaseUrl) {
       const path = require('path');
-      const fileName = path.basename(pdfFilePath);
-      messageOptions.mediaUrl = [`${publicBaseUrl}/${fileName}`];
+      mediaUrl = publicBaseUrl + '/' + path.basename(pdfFilePath);
     }
 
-    const result = await client.messages.create(messageOptions);
-
+    const result = await sendViaTwilio(defaultMsg, mediaUrl);
     if (result.sid) {
-      logger.info(`WhatsApp report sent successfully. SID: ${result.sid}`);
-      return { success: true, sid: result.sid, error: null };
-    } else {
-      const error = 'Twilio did not return a message SID';
-      logger.error(error);
-      return { success: false, sid: null, error };
+      logger.info('WhatsApp sent via Twilio. SID: ' + result.sid);
+      return { success: true, sid: result.sid, method: 'twilio', error: null };
     }
+    return { success: false, sid: null, method: 'twilio', error: 'No SID returned from Twilio' };
   } catch (error) {
-    logger.error(`WhatsApp delivery failed: ${error.message}`);
-    return { success: false, sid: null, error: error.message };
+    logger.error('WhatsApp delivery failed: ' + error.message);
+    return { success: false, sid: null, method: 'twilio', error: error.message };
   }
 }
 
-module.exports = {
-  sendReportViaWhatsApp,
-};
+module.exports = { sendReportViaWhatsApp, getDeliveryMode };
