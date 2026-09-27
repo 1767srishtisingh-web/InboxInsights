@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InboxInsights - Smart Email Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header h1 { font-size: 24px; font-weight: 600; }
+    .header .subtitle { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .container { max-width: 1000px; margin: 0 auto; padding: 25px 20px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .stat-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a73e8;
+    }
+    .stat-card .label {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: #1a73e8;
+      border-bottom: 2px solid #e8f0fe;
+      padding-bottom: 8px;
+    }
+
+    .account-list { list-style: none; }
+    .account-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .account-item:last-child { border-bottom: none; }
+    .account-email { font-weight: 500; }
+    .account-sync { font-size: 12px; color: #888; }
+    .account-remove {
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 12px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .account-remove:hover { background: #cc0000; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-primary { background: #1a73e8; color: white; }
+    .btn-primary:hover { background: #1557b0; }
+    .btn-success { background: #0d904f; color: white; }
+    .btn-success:hover { background: #0a7a42; }
+    .btn-warning { background: #f9a825; color: #333; }
+    .btn-warning:hover { background: #f57f17; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-active { background: #e6f4ea; color: #137333; }
+    .status-pending { background: #fef7e0; color: #b06000; }
+    .status-failed { background: #fce8e6; color: #c5221f; }
+    .status-sent { background: #e6f4ea; color: #137333; }
+
+    .scheduler-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .scheduler-info div { padding: 8px 0; }
+    .scheduler-info .label { font-size: 13px; color: #666; }
+    .scheduler-info .value { font-weight: 500; }
+
+    .report-info div { padding: 6px 0; }
+    .report-info .label { font-size: 13px; color: #666; display: inline-block; width: 150px; }
+    .report-info .value { font-weight: 500; }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #888;
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .alert-success { background: #e6f4ea; color: #137333; }
+    .alert-error { background: #fce8e6; color: #c5221f; }
+
+    .loading { text-align: center; padding: 20px; color: #888; }
+
+    #notification { display: none; position: fixed; top: 20px; right: 20px; z-index: 100; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>📧 InboxInsights</h1>
+      <div class="subtitle">Smart Email Dashboard</div>
+    </div>
+    <a href="/auth/google" class="btn btn-primary" style="background: white; color: #1a73e8;">+ Add Gmail Account</a>
+  </div>
+
+  <div id="notification"></div>
+
+  <div class="container">
+    <div id="auth-alert"></div>
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="value" id="stat-accounts">-</div><div class="label">Connected Accounts</div></div>
+      <div class="stat-card"><div class="value" id="stat-emails">-</div><div class="label">Total Emails Collected</div></div>
+      <div class="stat-card"><div class="value" id="stat-reports">-</div><div class="label">Reports Generated</div></div>
+      <div class="stat-card"><div class="value" id="stat-scheduler">-</div><div class="label">Scheduler</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📥 Connected Gmail Accounts</h2>
+      <div id="accounts-list"><div class="loading">Loading...</div></div>
+    </div>
+
+    <div class="card">
+      <h2>⏰ Scheduler</h2>
+      <div class="scheduler-info" id="scheduler-info"><div class="loading">Loading...</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📄 Latest Report</h2>
+      <div class="report-info" id="report-info"><div class="loading">Loading...</div></div>
+    </div>
+
+    <div class="card">
+      <h2>⚡ Actions</h2>
+      <p style="margin-bottom: 10px; color: #666; font-size: 14px;">Manually trigger the email report pipeline.</p>
+      <div class="btn-group">
+        <button class="btn btn-warning" onclick="runPipeline(false)">🧪 Test Run (No WhatsApp)</button>
+        <button class="btn btn-success" onclick="runPipeline(true)">📤 Run & Send WhatsApp</button>
+      </div>
+      <div id="pipeline-result" style="margin-top: 15px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Check URL params for auth result
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'success') {
+      document.getElementById('auth-alert').innerHTML =
+        `<div class="alert alert-success">✅ Gmail account ${params.get('email') || ''} connected successfully!</div>`;
+      window.history.replaceState({}, '', '/');
+    } else if (params.get('auth') === 'error') {
+      document.getElementById('auth-alert').innerHTML =
+        `<div class="alert alert-error">❌ Authentication failed: ${params.get('message') || 'Unknown error'}</div>`;
+      window.history.replaceState({}, '', '/');
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        const d = data.data;
+
+        // Stats
+        document.getElementById('stat-accounts').textContent = d.activeAccounts;
+        document.getElementById('stat-emails').textContent = d.totalEmailsCollected;
+        document.getElementById('stat-reports').textContent = d.totalReportsGenerated;
+        document.getElementById('stat-scheduler').textContent = d.scheduler.running ? '✅ Active' : '❌ Off';
+
+        // Accounts
+        if (d.accounts.length === 0) {
+          document.getElementById('accounts-list').innerHTML =
+            `<div class="empty-state"><div class="icon">📭</div><p>No Gmail accounts connected yet.</p><p style="margin-top:8px;"><a href="/auth/google" class="btn btn-primary">Connect Gmail Account</a></p></div>`;
+        } else {
+          let html = '<ul class="account-list">';
+          for (const a of d.accounts) {
+            html += `<li class="account-item">
+              <div><div class="account-email">${a.email}</div>
+              <div class="account-sync">Last sync: ${a.lastSync || 'Never'}</div></div>
+              <button class="account-remove" onclick="removeAccount('${a.email}')">Remove</button>
+            </li>`;
+          }
+          html += '</ul>';
+          document.getElementById('accounts-list').innerHTML = html;
+        }
+
+        // Scheduler
+        const s = d.scheduler;
+        document.getElementById('scheduler-info').innerHTML = `
+          <div><div class="label">Status</div><div class="value"><span class="status-badge ${s.running ? 'status-active' : 'status-failed'}">${s.running ? 'Active' : 'Inactive'}</span></div></div>
+          <div><div class="label">Report Time</div><div class="value">${s.reportTime}</div></div>
+          <div><div class="label">Timezone</div><div class="value">${s.timezone}</div></div>
+          <div><div class="label">Cron Expression</div><div class="value">${s.cronExpression}</div></div>
+        `;
+
+        // Latest report
+        const r = d.latestReport;
+        if (r) {
+          document.getElementById('report-info').innerHTML = `
+            <div><span class="label">Report Date:</span><span class="value">${r.report_date}</span></div>
+            <div><span class="label">Accounts Processed:</span><span class="value">${r.total_accounts}</span></div>
+            <div><span class="label">Emails Collected:</span><span class="value">${r.total_emails}</span></div>
+            <div><span class="label">PDF Status:</span><span class="value"><span class="status-badge status-${r.generation_status === 'success' ? 'active' : 'failed'}">${r.generation_status}</span></span></div>
+            <div><span class="label">WhatsApp Status:</span><span class="value"><span class="status-badge status-${r.whatsapp_status === 'sent' ? 'sent' : r.whatsapp_status === 'failed' ? 'failed' : 'pending'}">${r.whatsapp_status}</span></span></div>
+            <div><span class="label">Generated At:</span><span class="value">${r.created_at}</span></div>
+            ${r.error_message ? `<div><span class="label">Error:</span><span class="value" style="color:#c5221f;">${r.error_message}</span></div>` : ''}
+          `;
+        } else {
+          document.getElementById('report-info').innerHTML =
+            '<div class="empty-state"><div class="icon">📄</div><p>No reports generated yet.</p></div>';
+        }
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      }
+    }
+
+    async function removeAccount(email) {
+      if (!confirm(`Remove ${email}?`)) return;
+      try {
+        await fetch(`/api/accounts/${encodeURIComponent(email)}`, { method: 'DELETE' });
+        loadDashboard();
+      } catch (err) {
+        alert('Failed to remove account: ' + err.message);
+      }
+    }
+
+    async function runPipeline(sendWhatsApp) {
+      const resultDiv = document.getElementById('pipeline-result');
+      resultDiv.innerHTML = '<div class="loading">⏳ Running pipeline... This may take a minute.</div>';
+
+      try {
+        const url = sendWhatsApp ? '/api/run?force=true' : '/api/run/test?force=true';
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+
+        if (data.success) {
+          resultDiv.innerHTML = `<div class="alert alert-success">✅ Pipeline completed successfully!<br>Emails: ${data.result?.emailFetch?.totalEmails || 0} | PDF: ${data.result?.pdfGeneration?.success ? 'Generated' : 'Failed'}${sendWhatsApp ? ' | WhatsApp: ' + (data.result?.whatsappDelivery?.success ? 'Sent' : 'Failed') : ''}</div>`;
+        } else {
+          resultDiv.innerHTML = `<div class="alert alert-error">❌ Pipeline failed: ${data.result?.error || data.error || 'Unknown error'}</div>`;
+        }
+        loadDashboard();
+      } catch (err) {
+        resultDiv.innerHTML = `<div class="alert alert-error">❌ Error: ${err.message}</div>`;
+      }
+    }
+
+    // Initial load
+    loadDashboard();
+    // Auto refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>
