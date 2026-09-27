@@ -1,164 +1,136 @@
-# InboxInsights - Smart Email Dashboard
+# SmartMail (InboxInsights) — Smart Email Dashboard
 
-Automated multi-Gmail account email subject reporter with daily PDF generation and WhatsApp delivery via Twilio.
-
-## Architecture
+Automated multi-Gmail account email subject reporter with scheduled PDF generation and WhatsApp delivery.
 
 ```
-MULTIPLE GMAIL ACCOUNTS
-        ↓
-Google OAuth 2.0 authentication
-        ↓
-Fetch emails (Gmail API)
-        ↓
-Extract email subjects
-        ↓
-Generate structured PDF (PDFKit)
-        ↓
-Scheduled automatic execution (node-cron)
-        ↓
-Send PDF through WhatsApp (Twilio)
+MULTIPLE GMAIL ACCOUNTS (Google OAuth 2.0 or Demo Accounts)
+                        ↓
+             Fetch Emails (Gmail API / Demo)
+                        ↓
+              Extract Email Subjects
+                        ↓
+          Generate Structured PDF (PDFKit)
+                        ↓
+     Scheduled Daily Execution (node-cron, dynamic)
+                        ↓
+    Delivery Layer (Twilio WhatsApp or Demo / Local Download)
 ```
+
+## Features
+
+- **Multi-Gmail Account Management**: Connect multiple accounts securely via Google OAuth 2.0.
+- **SaaS-Style Single Page Dashboard**: Modern blue palette (`#0f1b2d`, `#2563eb`), Inter typography, smooth hover micro-interactions, responsive across desktop & mobile.
+- **User Registration & Preference Management**: Store user name, masked WhatsApp number, preferred report time, and timezone.
+- **Subject Extraction & PDF Generation**: Groups emails by account, numbers subjects, adds timestamps, sender metadata, and summary counters. Includes Unicode text sanitization.
+- **Free Demo Delivery Mode**: Clear distinction between Real Delivery (Twilio WhatsApp) and Demo Delivery (instant PDF download) without requiring paid credentials for presentation.
+- **Manual Pipeline Execution**: Test the entire pipeline anytime with a single click via UI or terminal.
+- **Dynamic Scheduler**: Change schedule time per user dynamically without restarting the server.
+- **SQLite Persistence**: Uses `sql.js` (pure JS SQLite) with zero C++ compilation dependencies.
+
+---
 
 ## Project Structure
 
 ```
 InboxInsights/
 ├── src/
-│   ├── server.js           # Express server & API routes
-│   ├── config.js            # Centralized configuration
-│   ├── logger.js            # Winston logging
-│   ├── database.js          # SQLite database (better-sqlite3)
-│   ├── gmail-auth.js        # Google OAuth 2.0 multi-account
-│   ├── email-fetcher.js     # Gmail API email fetching
-│   ├── pdf-generator.js     # PDF report generation (PDFKit)
-│   ├── whatsapp-sender.js   # Twilio WhatsApp delivery
-│   ├── scheduler.js         # Daily cron scheduler
-│   ├── pipeline.js          # Orchestrates fetch → PDF → WhatsApp
-│   ├── test-pipeline.js     # Manual test script
+│   ├── server.js           # Express server & REST API routes
+│   ├── config.js           # Centralized configuration & environment loader
+│   ├── logger.js           # Winston logger with console & file rotation
+│   ├── database.js         # SQLite database management (sql.js)
+│   ├── gmail-auth.js       # Google OAuth 2.0 multi-account handling
+│   ├── email-fetcher.js    # Gmail API fetcher with rate/error safety
+│   ├── pdf-generator.js    # PDF report builder with Unicode sanitization
+│   ├── whatsapp-sender.js  # Delivery layer abstraction (Twilio / Demo)
+│   ├── scheduler.js        # Dynamic cron scheduler with restart support
+│   ├── pipeline.js         # Pipeline orchestrator (Fetch → PDF → Deliver)
+│   ├── test-pipeline.js    # CLI test harness
 │   └── public/
-│       └── index.html       # Dashboard UI
-├── data/                    # Auto-created (gitignored)
-│   ├── tokens/              # OAuth tokens per account
-│   ├── reports/             # Generated PDF reports
-│   ├── logs/                # Application logs
-│   └── inbox_insights.db   # SQLite database
+│       └── index.html      # Responsive SaaS dashboard UI
+├── data/                   # Runtime storage (gitignored)
+│   ├── tokens/             # Stored OAuth tokens per account
+│   ├── reports/            # Generated PDF files
+│   ├── logs/               # Application log files
+│   └── inbox_insights.db   # SQLite database file
 ├── package.json
 ├── .env.example
+├── .env
 ├── .gitignore
 └── README.md
 ```
 
-## Quick Start
+---
 
-### 1. Prerequisites
+## Quick Start (Demo Mode — 100% Free, No Setup Required)
 
-- Node.js >= 18
-- Google Cloud Console project with Gmail API enabled
-- Twilio account with WhatsApp sandbox enabled
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-### 2. Setup Google OAuth
+2. **Start the application:**
+   ```bash
+   npm start
+   ```
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable **Gmail API** and **Google People API**
-4. Go to **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
-5. Set Application type: **Web application**
-6. Add Authorized redirect URI: `http://localhost:3000/auth/google/callback`
-7. Copy the Client ID and Client Secret
+3. **Open the Dashboard:**
+   Visit `http://localhost:3000/` in your browser.
 
-### 3. Setup Twilio WhatsApp
+4. **Register & Test:**
+   - Enter your name (e.g. `Srishti Singh`).
+   - Click **"+ Add Demo Account"** to add demo Gmail accounts.
+   - Click **"Create My Report Schedule"**.
+   - Click **"Demo Test Run"** under Actions.
+   - Click **"Download PDF"** to inspect the generated report!
 
-1. Create a [Twilio account](https://www.twilio.com/)
-2. Activate the WhatsApp Sandbox in Twilio Console
-3. Note your Account SID, Auth Token, and WhatsApp sandbox number
+---
 
-### 4. Configure Environment
+## Real Gmail & WhatsApp Setup (Optional)
 
-```bash
-cp .env.example .env
-```
+### 1. Google OAuth 2.0 Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a project and enable **Gmail API**.
+3. Create an **OAuth 2.0 Client ID** (Web application).
+4. Add Authorized redirect URI: `http://localhost:3000/auth/google/callback`.
+5. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env`.
 
-Edit `.env` with your credentials:
+### 2. Twilio WhatsApp Setup
+1. Register a free account at [Twilio](https://www.twilio.com/).
+2. Enable the WhatsApp Sandbox under Messaging.
+3. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, and `WHATSAPP_TO` in `.env`.
 
-```env
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
-TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
-WHATSAPP_TO=whatsapp:+91XXXXXXXXXX
-REPORT_TIME=20:00
-TIMEZONE=Asia/Kolkata
-```
+---
 
-### 5. Install & Run
-
-```bash
-npm install
-npm start
-```
-
-### 6. Connect Gmail Accounts
-
-Visit `http://localhost:3000/auth/google` to connect each Gmail account.
-Repeat for each account you want to monitor.
-
-## API Endpoints
+## API Reference
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Dashboard UI |
-| GET | `/auth/google` | Start Gmail OAuth flow |
-| GET | `/api/dashboard` | Dashboard data |
-| GET | `/api/accounts` | List connected accounts |
-| GET | `/api/accounts/verify` | Verify all account tokens |
-| DELETE | `/api/accounts/:email` | Remove an account |
-| POST | `/api/run` | Run pipeline + send WhatsApp |
-| POST | `/api/run/test` | Run pipeline (no WhatsApp) |
-| GET | `/api/reports/latest` | Latest report info |
-| GET | `/api/scheduler` | Scheduler status |
+|---|---|---|
+| `GET` | `/` | Single-page SaaS Dashboard |
+| `GET` | `/api/status` | High-level system & registration status |
+| `GET` | `/api/dashboard` | Aggregated dashboard metrics & accounts |
+| `POST` | `/api/register` | Register or update user & scheduled report time |
+| `POST` | `/api/accounts/demo` | Add demo account for zero-config testing |
+| `GET` | `/auth/google` | Trigger Google OAuth 2.0 flow |
+| `GET` | `/auth/google/callback` | OAuth redirect callback |
+| `DELETE` | `/api/accounts/:email` | Disconnect an account |
+| `POST` | `/api/run` | Trigger pipeline with delivery (`force=true`, `demo=true`) |
+| `POST` | `/api/run/test` | Trigger pipeline in test mode (no delivery) |
+| `GET` | `/api/reports/latest` | Retrieve metadata of most recent report |
+| `GET` | `/api/reports/download` | Download current PDF report |
+| `GET` | `/api/scheduler` | Check cron schedule status & report time |
 
-## Manual Testing
+---
 
-### Test without WhatsApp:
+## CLI Testing
+
+Run pipeline test via command line anytime:
 ```bash
-# Via API
-curl -X POST http://localhost:3000/api/run/test?force=true
+# Test in demo mode
+node src/test-pipeline.js --demo
 
-# Via CLI
+# Test with live Gmail accounts (skip WhatsApp)
 node src/test-pipeline.js
+
+# Test with live Gmail accounts and send WhatsApp
+node src/test-pipeline.js --send-whatsapp
 ```
-
-### Test with WhatsApp:
-```bash
-# Via API
-curl -X POST http://localhost:3000/api/run?force=true
-
-# Via CLI
-node src/test-pipeline.js --send-whatsapp --force
-```
-
-## Configuration
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GOOGLE_CLIENT_ID` | - | Google OAuth Client ID |
-| `GOOGLE_CLIENT_SECRET` | - | Google OAuth Client Secret |
-| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/google/callback` | OAuth redirect |
-| `TWILIO_ACCOUNT_SID` | - | Twilio Account SID |
-| `TWILIO_AUTH_TOKEN` | - | Twilio Auth Token |
-| `TWILIO_WHATSAPP_FROM` | `whatsapp:+14155238886` | Twilio WhatsApp sender |
-| `WHATSAPP_TO` | - | Your WhatsApp number |
-| `REPORT_TIME` | `20:00` | Daily report time (HH:MM) |
-| `TIMEZONE` | `Asia/Kolkata` | Scheduler timezone |
-| `PORT` | `3000` | Server port |
-
-## Security
-
-- OAuth tokens stored locally in `data/tokens/` (gitignored)
-- No Gmail passwords stored
-- Minimum Gmail API scopes (readonly)
-- All sensitive data via environment variables
-- Generated reports not publicly accessible
-- `.env`, tokens, and reports excluded from git
