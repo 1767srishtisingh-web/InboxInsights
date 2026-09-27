@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static dashboard files
 app.use('/static', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve generated reports (for PDF download)
 app.use('/reports', express.static(config.paths.reports));
